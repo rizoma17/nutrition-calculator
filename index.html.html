@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>營養計算器</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin:0; background:#f2f2f2; }
+.container { max-width: 420px; margin:auto; padding:15px; }
+h2 { text-align:center; }
+.card { background:white; border-radius:16px; padding:15px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+.row { display:flex; justify-content:space-between; align-items:center; margin:8px 0; }
+input { width:70px; padding:6px; border-radius:8px; border:1px solid #ddd; text-align:center; }
+.result { font-size:14px; color:#555; }
+.total { font-size:18px; font-weight:bold; text-align:center; }
+button { width:100%; padding:10px; border:none; border-radius:12px; background:#333; color:white; font-size:16px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>🍽️ 營養計算器</h2>
+
+<div class="card" id="foods"></div>
+
+<div class="card total">
+蛋白質：<span id="totalProtein">0</span> g<br>
+熱量：<span id="totalCal">0</span> kcal
+</div>
+
+<button onclick="resetAll()">重置</button>
+</div>
+
+<script>
+const foodData = [
+  {name:"雞胸肉", protein:0.30, cal:1.65},
+  {name:"毛豆", protein:0.11, cal:1.2},
+  {name:"板豆腐", protein:0.08, cal:0.8},
+  {name:"馬鈴薯", protein:0.02, cal:0.8},
+  // 雞蛋改為以「顆」為單位（1顆 ≈ 6.5g蛋白質 / 70 kcal）
+  {name:"雞蛋（顆）", protein:6.5, cal:70, unit:"piece"}
+];
+
+const container = document.getElementById("foods");
+
+foodData.forEach((food, index) => {
+  const div = document.createElement("div");
+  div.className = "row";
+
+  div.innerHTML = `
+    <div>
+      <div>${food.name}</div>
+      <div class="result" id="result-${index}">蛋白質 0g / 熱量 0kcal</div>
+    </div>
+    <input type="number" value="0" oninput="calculate()" id="input-${index}">
+  `;
+
+  container.appendChild(div);
+});
+
+function calculate() {
+  let totalProtein = 0;
+  let totalCal = 0;
+
+  foodData.forEach((food, index) => {
+    const val = parseFloat(document.getElementById(`input-${index}`).value) || 0;
+
+    let protein = 0;
+    let cal = 0;
+
+    if(food.unit === "piece"){
+      protein = val * food.protein;
+      cal = val * food.cal;
+    } else {
+      protein = val * food.protein;
+      cal = val * food.cal;
+    }
+
+    document.getElementById(`result-${index}`).innerText = `蛋白質 ${protein.toFixed(1)}g / 熱量 ${cal.toFixed(0)}kcal`;
+
+    totalProtein += protein;
+    totalCal += cal;
+  });
+
+  document.getElementById("totalProtein").innerText = totalProtein.toFixed(1);
+  document.getElementById("totalCal").innerText = totalCal.toFixed(0);
+}
+
+function resetAll(){
+  foodData.forEach((_, index) => {
+    document.getElementById(`input-${index}`).value = 0;
+    document.getElementById(`result-${index}`).innerText = "蛋白質 0g / 熱量 0kcal";
+  });
+  document.getElementById("totalProtein").innerText = 0;
+  document.getElementById("totalCal").innerText = 0;
+}
+</script>
+
+</body>
+</html>
