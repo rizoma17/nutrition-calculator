@@ -37,7 +37,8 @@ const foodData = [
   {name:"毛豆", protein:0.11, cal:1.2},
   {name:"板豆腐", protein:0.08, cal:0.8},
   {name:"馬鈴薯", protein:0.02, cal:0.8},
-  // 雞蛋改為以「顆」為單位（1顆 ≈ 6.5g蛋白質 / 70 kcal）
+  {name:"地瓜", protein:0.02, cal:0.9},
+  {name:"鯛魚片", protein:0.20, cal:1.0},
   {name:"雞蛋（顆）", protein:6.5, cal:70, unit:"piece"}
 ];
 
@@ -49,10 +50,10 @@ foodData.forEach((food, index) => {
 
   div.innerHTML = `
     <div>
-      <div>${food.name}</div>
+      <div>${food.name}${food.unit === "piece" ? "" : " (g)"}</div>
       <div class="result" id="result-${index}">蛋白質 0g / 熱量 0kcal</div>
     </div>
-    <input type="number" value="0" oninput="calculate()" id="input-${index}">
+    <div style="display:flex;align-items:center;gap:4px;"><input type="number" placeholder="輸入" oninput="calculate()" id="input-${index}"><span style="font-size:12px;color:#888;">g</span></div>
   `;
 
   container.appendChild(div);
