@@ -6,33 +6,30 @@
 <title>營養計算器</title>
 <meta name="application-name" content="營養計算器">
 <meta name="apple-mobile-web-app-title" content="營養計算器">
+<meta name="theme-color" content="#236650">
 <style>
-body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin:0; background:#f2f2f2; }
-.container { max-width: 420px; margin:auto; padding:15px; }
-h2 { text-align:center; }
-.card { background:white; border-radius:16px; padding:15px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
-.row { display:flex; justify-content:space-between; align-items:center; margin:8px 0; }
-input { width:70px; padding:6px; border-radius:8px; border:1px solid #ddd; text-align:center; }
-.result { font-size:14px; color:#555; }
-.total { font-size:18px; font-weight:bold; text-align:center; }
-button { width:100%; padding:10px; border:none; border-radius:12px; background:#333; color:white; font-size:16px; }
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263e35;background:#f5f6f2;font-size:16px}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}
+.container{max-width:540px;margin:auto;padding:24px 16px 150px}h1{font-size:26px;margin:0 0 6px}h2{font-size:18px;margin:0}p{margin:6px 0}.muted{color:#718078;font-size:13px;line-height:1.6}
+.card{background:#fff;border:1px solid #e1e7df;border-radius:20px;padding:18px;margin-top:16px}.datebar{display:flex;gap:10px;align-items:center;margin-top:16px}.datebar input{flex:1;min-width:0;border:1px solid #d3ded4;border-radius:12px;padding:12px;background:white;color:inherit}
+button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443;min-height:44px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.tabs button[aria-pressed="true"]{background:#236650;color:white}
+.meal-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0}.meal-summary button{font-size:12px;padding:12px 4px;line-height:1.8;background:#f0f4ed}.meal-summary b{font-size:16px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.clear{background:transparent;color:#97634f;padding:8px;font-size:13px}
+.food{padding:15px 0;border-bottom:1px solid #edf0e9;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.food:last-child{border-bottom:0}.food.active{background:#f4f8f0}.food-name{font-size:14px;font-weight:600;line-height:1.5}.food-result{color:#738078;font-size:12px;line-height:1.6;margin-top:4px}.amount{display:flex;gap:5px;align-items:center;font-size:12px;white-space:nowrap}.amount input{width:76px;min-height:44px;padding:8px 4px;border:1px solid #cbd9ca;border-radius:10px;text-align:center;background:white;color:#263e35}
+.history-list{display:grid;gap:8px;margin-top:12px}.history-row{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f5f7f1;font-size:13px}.history-row span:last-child{text-align:right;color:#617566}.history-row[aria-current="date"]{outline:2px solid #236650}.history-empty{font-size:13px;color:#718078;padding:8px 0}.history-row small{display:block;font-size:11px}
+.totals{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:1px solid #dce5da;padding:14px 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px #263e3508}.totals-inner{max-width:508px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}.total-number{font-size:24px;font-weight:750;color:#236650}.total-number small{font-size:13px;font-weight:400}.total-label{font-size:12px;color:#718078;margin-bottom:4px}.status{min-height:21px;font-size:12px;color:#617566;margin-top:8px}.status.error{color:#b14232}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.tools button{font-size:13px;padding:10px}.meal-total{font-size:13px;color:#617566;margin-top:8px}
+@media(max-width:360px){.container{padding-left:10px;padding-right:10px}.card{padding:12px}.amount input{width:62px}.total-number{font-size:21px}}
 </style>
 </head>
 <body>
-
-<div class="container">
-<h2>🍽️ 營養計算器</h2>
-
-<div class="card" id="foods"></div>
-
-<div class="card total">
-蛋白質：<span id="totalProtein">0</span> g<br>
-熱量：<span id="totalCal">0</span> kcal
-</div>
-
-<button onclick="resetAll()">重置</button>
-</div>
-
+<main class="container">
+<header><h1>營養計算器</h1><p class="muted">把每一餐，記得剛剛好。</p></header>
+<div class="datebar"><label for="recordDate">紀錄日期</label><input id="recordDate" type="date"><button id="today" type="button">今天</button></div>
+<nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button></nav>
+<section class="card" aria-label="當日各餐總計"><h2>當日三餐</h2><div id="mealSummary" class="meal-summary"></div></section>
+<section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><div id="foods"></div><div id="mealTotal" class="meal-total"></div><p id="saveStatus" class="status" role="status" aria-live="polite"></p></section>
+<section class="card"><h2>日期紀錄</h2><p class="muted">點選日期查看或修改三餐。</p><div id="history" class="history-list"></div><div class="tools"><button id="export" type="button">匯出紀錄備份</button><button id="import" type="button">匯入備份</button><input id="importFile" type="file" accept="application/json,.json" hidden></div><p class="muted">紀錄儲存在這台裝置的目前瀏覽器，不會自動同步。清除網站資料前，請先匯出備份。</p></section>
+</main>
+<footer class="totals"><div class="totals-inner"><div><div class="total-label" id="dayLabel">當日總計</div><div class="muted">早餐＋午餐＋晚餐</div></div><div><div class="total-label">蛋白質</div><div class="total-number"><span id="totalProtein">0.0</span> <small>g</small></div></div><div><div class="total-label">熱量</div><div class="total-number"><span id="totalCal">0</span> <small>kcal</small></div></div></div></footer>
 <script>
 const foodData = [
   // User package label: 40 g powder = 21.7 g protein and 157.1 kcal.
@@ -52,61 +49,50 @@ const foodData = [
   {name:"鯛魚片", protein:0.20, cal:1.0},
   {name:"雞蛋（顆）", protein:6.5, cal:70, unit:"piece"}
 ];
-
-const container = document.getElementById("foods");
-
-foodData.forEach((food, index) => {
-  const div = document.createElement("div");
-  div.className = "row";
-
-  div.innerHTML = `
-    <div>
-      <div>${food.name}${food.unit === "piece" || food.unit === "scoop" ? "" : " (g)"}</div>
-      <div class="result" id="result-${index}">蛋白質 0g / 熱量 0kcal</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:4px;"><input type="number" placeholder="輸入" oninput="calculate()" id="input-${index}"><span style="font-size:12px;color:#888;">${food.unit === "scoop" ? "平匙" : food.unit === "piece" ? "顆" : "g"}</span></div>
-  `;
-
-  container.appendChild(div);
+// Stable IDs keep saved amounts independent of display order and food names.
+const foodIds = ['vegan-tieguanyin','zhili-yogurt','chicken-thigh-cooked','white-rice-cooked','brown-rice-cooked','beef-shank','chicken-breast','edamame','firm-tofu','potato','sweet-potato','tilapia','egg'];
+foodData.forEach((food, i) => food.id = foodIds[i]);
+const mealNames = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐'};
+const storageKey = 'nutrition-calculator-records-v1';
+const dateInput = document.getElementById('recordDate');
+const status = document.getElementById('saveStatus');
+function localDate(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function validDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const d=new Date(value+'T12:00:00');return !isNaN(d)&&d.getFullYear()===Number(value.slice(0,4))&&d.getMonth()+1===Number(value.slice(5,7))&&d.getDate()===Number(value.slice(8,10));}
+function normalizeRecords(source){
+  const result={};if(!source||typeof source!=='object'||Array.isArray(source))throw Error('Invalid records');
+  Object.entries(source).forEach(([date,day])=>{if(!validDate(date)||!day||typeof day!=='object')return;const clean={};Object.keys(mealNames).forEach(meal=>{const values={};foodData.forEach(food=>{const amount=day[meal]?.[food.id];if(typeof amount==='number'&&Number.isFinite(amount)&&amount>0)values[food.id]=amount;});if(Object.keys(values).length)clean[meal]=values;});if(Object.keys(clean).length)result[date]=clean;});return result;
+}
+let records={},loadError=false;
+try{const saved=localStorage.getItem(storageKey);if(saved!==null){const parsed=JSON.parse(saved);if(parsed.version!==1)throw Error('Unknown version');records=normalizeRecords(parsed.records);}}catch(e){loadError=true;status.textContent='無法讀取既有紀錄；為避免覆蓋，暫停儲存。請先匯出備份或檢查瀏覽器設定。';status.classList.add('error');}
+let selectedDate=localDate();let selectedMeal='breakfast';dateInput.value=selectedDate;
+function amounts(meal=selectedMeal,date=selectedDate){return records[date]?.[meal]||{};}
+function sumMeal(meal,date=selectedDate){return foodData.reduce((total,food)=>{const n=amounts(meal,date)[food.id]||0;total.protein+=n*food.protein;total.cal+=n*food.cal;return total;},{protein:0,cal:0});}
+function sumDay(date=selectedDate){return Object.keys(mealNames).reduce((total,meal)=>{const x=sumMeal(meal,date);total.protein+=x.protein;total.cal+=x.cal;return total;},{protein:0,cal:0});}
+function persist(){if(loadError)return;try{localStorage.setItem(storageKey,JSON.stringify({version:1,records}));status.textContent='已自動儲存';status.classList.remove('error');}catch(e){status.textContent='儲存失敗，請立即匯出備份；關閉頁面後可能遺失此次修改。';status.classList.add('error');}}
+const foodsElement=document.getElementById('foods');
+foodData.forEach(food=>{
+ const row=document.createElement('div');row.className='food';row.id='row-'+food.id;
+ const info=document.createElement('div');const name=document.createElement('label');name.className='food-name';name.htmlFor='input-'+food.id;name.textContent=food.name;const detail=document.createElement('div');detail.className='food-result';detail.id='result-'+food.id;info.append(name,detail);
+ const control=document.createElement('div');control.className='amount';const input=document.createElement('input');input.type='number';input.min='0';input.step=food.unit==='scoop'?'0.5':food.unit==='piece'?'1':'any';input.inputMode='decimal';input.placeholder='0';input.id='input-'+food.id;input.setAttribute('aria-label',food.name+'份量');const unit=document.createElement('span');unit.textContent=food.unit==='scoop'?'平匙':food.unit==='piece'?'顆':'g';control.append(input,unit);row.append(info,control);foodsElement.append(row);
+ input.addEventListener('input',()=>{let n=Number(input.value);if(!Number.isFinite(n)||n<0){n=0;input.value='';}if(n>0){records[selectedDate]??={};records[selectedDate][selectedMeal]??={};records[selectedDate][selectedMeal][food.id]=n;}else{delete records[selectedDate]?.[selectedMeal]?.[food.id];prune();}persist();renderTotals();});
 });
-
-function calculate() {
-  let totalProtein = 0;
-  let totalCal = 0;
-
-  foodData.forEach((food, index) => {
-    const val = parseFloat(document.getElementById(`input-${index}`).value) || 0;
-
-    let protein = 0;
-    let cal = 0;
-
-    if(food.unit === "piece"){
-      protein = val * food.protein;
-      cal = val * food.cal;
-    } else {
-      protein = val * food.protein;
-      cal = val * food.cal;
-    }
-
-    document.getElementById(`result-${index}`).innerText = `蛋白質 ${protein.toFixed(1)}g / 熱量 ${cal.toFixed(0)}kcal`;
-
-    totalProtein += protein;
-    totalCal += cal;
-  });
-
-  document.getElementById("totalProtein").innerText = totalProtein.toFixed(1);
-  document.getElementById("totalCal").innerText = totalCal.toFixed(0);
+function prune(){if(records[selectedDate]?.[selectedMeal]&&!Object.keys(records[selectedDate][selectedMeal]).length)delete records[selectedDate][selectedMeal];if(records[selectedDate]&&!Object.keys(records[selectedDate]).length)delete records[selectedDate];}
+function selectMeal(meal){selectedMeal=meal;render();}
+function selectDate(date){if(!validDate(date)){dateInput.value=selectedDate;return;}selectedDate=date;dateInput.value=date;render();}
+document.querySelectorAll('[data-meal]').forEach(button=>button.addEventListener('click',()=>selectMeal(button.dataset.meal)));
+dateInput.addEventListener('change',()=>selectDate(dateInput.value));document.getElementById('today').addEventListener('click',()=>selectDate(localDate()));
+function render(){document.getElementById('mealTitle').textContent=mealNames[selectedMeal]+'食物';document.querySelectorAll('[data-meal]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.meal===selectedMeal)));foodData.forEach(food=>{document.getElementById('input-'+food.id).value=amounts()[food.id]||'';});renderTotals();}
+function renderTotals(){
+ foodData.forEach(food=>{const n=amounts()[food.id]||0;document.getElementById('result-'+food.id).textContent='蛋白質 '+(n*food.protein).toFixed(1)+' g · '+(n*food.cal).toFixed(0)+' kcal';document.getElementById('row-'+food.id).classList.toggle('active',n>0);});
+ const current=sumMeal(selectedMeal),day=sumDay();document.getElementById('mealTotal').textContent=mealNames[selectedMeal]+'小計：蛋白質 '+current.protein.toFixed(1)+' g · '+current.cal.toFixed(0)+' kcal';document.getElementById('totalProtein').textContent=day.protein.toFixed(1);document.getElementById('totalCal').textContent=day.cal.toFixed(0);document.getElementById('dayLabel').textContent=selectedDate+' 總計';
+ const summary=document.getElementById('mealSummary');summary.replaceChildren();Object.keys(mealNames).forEach(meal=>{const t=sumMeal(meal);const button=document.createElement('button');button.type='button';button.innerHTML=mealNames[meal]+'<br><b>'+t.protein.toFixed(1)+' g</b><br>'+t.cal.toFixed(0)+' kcal';button.setAttribute('aria-label',mealNames[meal]+'，蛋白質'+t.protein.toFixed(1)+'公克，'+t.cal.toFixed(0)+'大卡');button.addEventListener('click',()=>selectMeal(meal));summary.append(button);});renderHistory();
 }
-
-function resetAll(){
-  foodData.forEach((_, index) => {
-    document.getElementById(`input-${index}`).value = 0;
-    document.getElementById(`result-${index}`).innerText = "蛋白質 0g / 熱量 0kcal";
-  });
-  document.getElementById("totalProtein").innerText = 0;
-  document.getElementById("totalCal").innerText = 0;
-}
+function renderHistory(){const history=document.getElementById('history');history.replaceChildren();const dates=Object.keys(records).sort().reverse();if(!dates.length){const p=document.createElement('p');p.className='history-empty';p.textContent='還沒有紀錄，輸入第一餐就會自動建立。';history.append(p);return;}dates.forEach(date=>{const t=sumDay(date),button=document.createElement('button');button.type='button';button.className='history-row';if(date===selectedDate)button.setAttribute('aria-current','date');const left=document.createElement('span');left.textContent=date;const small=document.createElement('small');small.textContent=Object.keys(mealNames).filter(meal=>Object.keys(amounts(meal,date)).length).map(meal=>mealNames[meal]).join(' · ');left.append(small);const right=document.createElement('span');right.textContent='蛋白質 '+t.protein.toFixed(1)+' g · '+t.cal.toFixed(0)+' kcal';button.append(left,right);button.addEventListener('click',()=>{selectDate(date);dateInput.scrollIntoView({behavior:'smooth',block:'start'});});history.append(button);});}
+document.getElementById('clearMeal').addEventListener('click',()=>{if(!Object.keys(amounts()).length)return;if(!confirm('清空 '+selectedDate+' 的'+mealNames[selectedMeal]+'紀錄？'))return;delete records[selectedDate][selectedMeal];prune();persist();render();});
+document.getElementById('export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),records},null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='nutrition-records-'+localDate()+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);});
+document.getElementById('import').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(loadError)throw Error('讀取異常尚未排除，暫停匯入');const parsed=JSON.parse(await file.text());if(parsed.version!==1)throw Error('不支援的備份版本');const incoming=normalizeRecords(parsed.records);if(!Object.keys(incoming).length)throw Error('找不到有效紀錄');const conflicts=Object.entries(incoming).some(([date,day])=>Object.keys(day).some(meal=>records[date]?.[meal]));if(conflicts&&!confirm('備份包含相同日期及餐別，匯入後將取代這些餐別的紀錄，是否繼續？'))return;Object.entries(incoming).forEach(([date,day])=>{records[date]={...(records[date]||{}),...day};});persist();render();}catch(e){alert('無法匯入：'+e.message);}finally{event.target.value='';}});
+render();
 </script>
-
 </body>
 </html>
