@@ -34,7 +34,7 @@ button { width:100%; padding:10px; border:none; border-radius:12px; background:#
 <script>
 const foodData = [
   // User package label: 40 g powder = 21.7 g protein and 157.1 kcal.
-  {name:"樂維根植物蛋白（鐵觀音）", protein:21.7/40, cal:157.1/40},
+  {name:"樂維根植物蛋白（鐵觀音，1平匙＝40g）", protein:21.7, cal:157.1, unit:"scoop"},
   // Yogurt: regular unsweetened 質立 (not 蛋白PLUS), 4 g protein / 114 kcal per 100 g.
   {name:"質立無加糖希臘式優格", protein:0.04, cal:1.14},
   // USDA FDC 172388: roasted thigh meat only; cooked weight without skin or bone.
@@ -59,10 +59,10 @@ foodData.forEach((food, index) => {
 
   div.innerHTML = `
     <div>
-      <div>${food.name}${food.unit === "piece" ? "" : " (g)"}</div>
+      <div>${food.name}${food.unit === "piece" || food.unit === "scoop" ? "" : " (g)"}</div>
       <div class="result" id="result-${index}">蛋白質 0g / 熱量 0kcal</div>
     </div>
-    <div style="display:flex;align-items:center;gap:4px;"><input type="number" placeholder="輸入" oninput="calculate()" id="input-${index}"><span style="font-size:12px;color:#888;">g</span></div>
+    <div style="display:flex;align-items:center;gap:4px;"><input type="number" placeholder="輸入" oninput="calculate()" id="input-${index}"><span style="font-size:12px;color:#888;">${food.unit === "scoop" ? "平匙" : food.unit === "piece" ? "顆" : "g"}</span></div>
   `;
 
   container.appendChild(div);
