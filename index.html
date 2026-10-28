@@ -12,8 +12,8 @@
 *{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}
 .container{max-width:540px;margin:auto;padding:24px 16px calc(190px + env(safe-area-inset-bottom))}h1{font-size:26px;margin:0 0 6px}h2{font-size:18px;margin:0}p{margin:6px 0}.muted{color:#718078;font-size:13px;line-height:1.6}
 .card{background:#fff;border:1px solid #e1e7df;border-radius:20px;padding:18px;margin-top:16px}.datebar{display:flex;gap:10px;align-items:center;margin-top:16px}.datebar input{flex:1;min-width:0;border:1px solid #d3ded4;border-radius:12px;padding:12px;background:white;color:inherit}
-button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443;min-height:44px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.tabs button[aria-pressed="true"]{background:#236650;color:white}
-.meal-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0}.meal-summary button{font-size:12px;padding:12px 4px;line-height:1.8;background:#f0f4ed}.meal-summary b{font-size:16px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.clear{background:transparent;color:#97634f;padding:8px;font-size:13px}
+button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443;min-height:44px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.tabs button[aria-pressed="true"]{background:#236650;color:white}
+.meal-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0 0}.meal-summary button{font-size:12px;padding:12px 4px;line-height:1.8;background:#f0f4ed}.meal-summary b{font-size:16px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.clear{background:transparent;color:#97634f;padding:8px;font-size:13px}
 .food{padding:15px 0;border-bottom:1px solid #edf0e9;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.food:last-child{border-bottom:0}.food.active{background:#f4f8f0}.food-name{font-size:14px;font-weight:600;line-height:1.5}.food-result{color:#738078;font-size:12px;line-height:1.6;margin-top:4px}.amount{display:flex;gap:5px;align-items:center;font-size:12px;white-space:nowrap}.amount input{width:76px;min-height:44px;padding:8px 4px;border:1px solid #cbd9ca;border-radius:10px;text-align:center;background:white;color:#263e35}
 .history-list{display:grid;gap:8px;margin-top:12px}.history-row{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f5f7f1;font-size:13px}.history-row span:last-child{text-align:right;color:#617566}.history-row[aria-current="date"]{outline:2px solid #236650}.history-empty{font-size:13px;color:#718078;padding:8px 0}.history-row small{display:block;font-size:11px}
 .totals{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:10px;right:10px;border-radius:18px;background:rgba(255,255,255,.97);border-top:1px solid #dce5da;padding:16px;box-shadow:0 -4px 20px #263e3508}.totals-inner{max-width:508px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}.total-number{font-size:24px;font-weight:750;color:#236650}.total-number small{font-size:13px;font-weight:400}.total-label{font-size:12px;color:#718078;margin-bottom:4px}.status{min-height:21px;font-size:12px;color:#617566;margin-top:8px}.status.error{color:#b14232}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.tools button{font-size:13px;padding:10px}.meal-total{font-size:13px;color:#617566;margin-top:8px}
@@ -25,8 +25,8 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 <main class="container">
 <header><h1>營養計算器</h1><p class="muted">把每一餐，記得剛剛好。</p></header>
 <div class="datebar"><label for="recordDate">紀錄日期</label><input id="recordDate" type="date"><button id="today" type="button">今天</button></div>
-<nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button></nav>
-<section class="card" aria-label="當日各餐總計"><h2>當日三餐</h2><div id="mealSummary" class="meal-summary"></div></section>
+<nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button><button type="button" data-meal="other">其他</button></nav>
+<section class="card" aria-label="當日各餐總計"><h2>當日各餐</h2><div id="mealSummary" class="meal-summary"></div></section>
 <section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><div id="foods"></div>
 <div id="manualList" aria-label="本餐手動紀錄"></div>
 <details class="manual" id="manualPanel"><summary>＋ 手動新增食物</summary>
@@ -36,9 +36,9 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 <label for="manualProtein">蛋白質（g）<input id="manualProtein" type="number" min="0" step="any" inputmode="decimal" placeholder="例如：25" required></label>
 <label for="manualCal">熱量（kcal，可留白）<input id="manualCal" type="number" min="0" step="any" inputmode="decimal" placeholder="未知可留白"></label>
 </div><div class="manual-actions"><button class="primary" id="manualSubmit" type="submit">加入本餐</button><button id="manualCancel" type="button">取消</button></div><p id="manualError" class="manual-error" role="alert"></p></form></details><div id="mealTotal" class="meal-total"></div><p id="saveStatus" class="status" role="status" aria-live="polite"></p></section>
-<section class="card"><h2>日期紀錄</h2><p class="muted">點選日期查看或修改三餐。</p><div id="history" class="history-list"></div><div class="tools"><button id="export" type="button">匯出紀錄備份</button><button id="import" type="button">匯入備份</button><input id="importFile" type="file" accept="application/json,.json" hidden></div><p class="muted">紀錄儲存在這台裝置的目前瀏覽器，不會自動同步。清除網站資料前，請先匯出備份。</p></section>
+<section class="card"><h2>日期紀錄</h2><p class="muted">點選日期查看或修改各餐紀錄。</p><div id="history" class="history-list"></div><div class="tools"><button id="export" type="button">匯出紀錄備份</button><button id="import" type="button">匯入備份</button><input id="importFile" type="file" accept="application/json,.json" hidden></div><p class="muted">紀錄儲存在這台裝置的目前瀏覽器，不會自動同步。清除網站資料前，請先匯出備份。</p></section>
 </main>
-<footer class="totals"><div class="totals-inner"><div><div class="total-label" id="dayLabel">當日總計</div><div class="muted">早餐＋午餐＋晚餐</div></div><div><div class="total-label">蛋白質</div><div class="total-number"><span id="totalProtein">0.0</span> <small>g</small></div></div><div><div class="total-label">熱量</div><div class="total-number"><span id="totalCal">0</span> <small>kcal</small><div class="muted" id="unknownCalNote" role="status"></div></div></div></div></footer>
+<footer class="totals"><div class="totals-inner"><div><div class="total-label" id="dayLabel">當日總計</div><div class="muted">早餐＋午餐＋晚餐＋其他</div></div><div><div class="total-label">蛋白質</div><div class="total-number"><span id="totalProtein">0.0</span> <small>g</small></div></div><div><div class="total-label">熱量</div><div class="total-number"><span id="totalCal">0</span> <small>kcal</small><div class="muted" id="unknownCalNote" role="status"></div></div></div></div></footer>
 <script>
 const foodData = [
   // User package label: 40 g powder = 21.7 g protein and 157.1 kcal.
@@ -61,7 +61,7 @@ const foodData = [
 // Stable IDs keep saved amounts independent of display order and food names.
 const foodIds = ['vegan-tieguanyin','zhili-yogurt','chicken-thigh-cooked','white-rice-cooked','brown-rice-cooked','beef-shank','chicken-breast','edamame','firm-tofu','potato','sweet-potato','tilapia','egg'];
 foodData.forEach((food, i) => food.id = foodIds[i]);
-const mealNames = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐'};
+const mealNames = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐',other:'其他'};
 const storageKey = 'nutrition-calculator-records-v1';
 const dateInput = document.getElementById('recordDate');
 const status = document.getElementById('saveStatus');
