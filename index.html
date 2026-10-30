@@ -23,7 +23,7 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 </head>
 <body>
 <main class="container">
-<header><h1>營養計算器</h1><p class="muted">把每一餐，記得剛剛好。</p></header>
+<button id="updateApp" type="button" hidden>已有新版，點此更新</button><header><h1>營養計算器</h1><p class="muted">把每一餐，記得剛剛好。</p></header>
 <div class="datebar"><label for="recordDate">紀錄日期</label><input id="recordDate" type="date"><button id="today" type="button">今天</button></div>
 <nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button><button type="button" data-meal="other">其他</button></nav>
 <section class="card" aria-label="當日各餐總計"><h2>當日各餐</h2><div id="mealSummary" class="meal-summary"></div></section>
@@ -112,6 +112,14 @@ function renderManualList(){const list=document.getElementById('manualList');lis
 document.getElementById('manualCancel').addEventListener('click',resetManualForm);
 document.getElementById('manualForm').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('manualName').value.trim();const proteinText=document.getElementById('manualProtein').value;const calText=document.getElementById('manualCal').value;const protein=Number(proteinText),cal=calText.trim()===''?null:Number(calText);if(!name||name.length>100||proteinText===''||!Number.isFinite(protein)||(cal!==null&&(!Number.isFinite(cal)||cal<0))||protein<0){document.getElementById('manualError').textContent='請填寫食物名稱與蛋白質；熱量可留白，填寫的數值需為 0 或正數。';return;}records[selectedDate]??={};records[selectedDate][selectedMeal]??={};const values=records[selectedDate][selectedMeal];values._custom??=[];if(editingManualId!==null){const item=values._custom.find(x=>x.id===editingManualId);if(!item){document.getElementById('manualError').textContent='這筆紀錄已不存在，請重新選取。';return;}Object.assign(item,{name,protein,cal});}else{values._custom.push({id:'manual-'+Date.now()+'-'+Math.random().toString(36).slice(2),name,protein,cal});}resetManualForm();persist();renderManualList();renderTotals();});
 render();
+if('serviceWorker' in navigator){
+ navigator.serviceWorker.addEventListener('message',event=>{
+  if(event.data?.type==='NUTRITION_UPDATE_READY')document.getElementById('updateApp').hidden=false;
+ });
+ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{}));
+}
+document.getElementById('updateApp').addEventListener('click',()=>location.reload());
+
 </script>
 </body>
 </html>
