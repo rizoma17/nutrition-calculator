@@ -56,10 +56,11 @@ const foodData = [
   {name:"馬鈴薯", protein:0.02, cal:0.8},
   {name:"地瓜", protein:0.02, cal:0.9},
   {name:"鯛魚片", protein:0.20, cal:1.0},
-  {name:"雞蛋（顆）", protein:6.5, cal:70, unit:"piece"}
+  {name:"雞蛋（顆）", protein:6.5, cal:70, unit:"piece"},
+  {name:"鮪魚玉米小黃瓜", protein:34.3, cal:425, unit:"serving"}
 ];
 // Stable IDs keep saved amounts independent of display order and food names.
-const foodIds = ['vegan-tieguanyin','zhili-yogurt','chicken-thigh-cooked','white-rice-cooked','brown-rice-cooked','beef-shank','chicken-breast','edamame','firm-tofu','potato','sweet-potato','tilapia','egg'];
+const foodIds = ['vegan-tieguanyin','zhili-yogurt','chicken-thigh-cooked','white-rice-cooked','brown-rice-cooked','beef-shank','chicken-breast','edamame','firm-tofu','potato','sweet-potato','tilapia','egg','tuna-corn-cucumber'];
 foodData.forEach((food, i) => food.id = foodIds[i]);
 const mealNames = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐',other:'其他'};
 const storageKey = 'nutrition-calculator-records-v1';
@@ -85,7 +86,7 @@ const foodsElement=document.getElementById('foods');
 foodData.forEach(food=>{
  const row=document.createElement('div');row.className='food';row.id='row-'+food.id;
  const info=document.createElement('div');const name=document.createElement('label');name.className='food-name';name.htmlFor='input-'+food.id;name.textContent=food.name;const detail=document.createElement('div');detail.className='food-result';detail.id='result-'+food.id;info.append(name,detail);
- const control=document.createElement('div');control.className='amount';const input=document.createElement('input');input.type='number';input.min='0';input.step=food.unit==='scoop'?'0.5':food.unit==='piece'?'1':'any';input.inputMode='decimal';input.placeholder='0';input.id='input-'+food.id;input.setAttribute('aria-label',food.name+'份量');const unit=document.createElement('span');unit.textContent=food.unit==='scoop'?'平匙':food.unit==='piece'?'顆':'g';control.append(input,unit);row.append(info,control);foodsElement.append(row);
+ const control=document.createElement('div');control.className='amount';const input=document.createElement('input');input.type='number';input.min='0';input.step=food.unit==='scoop'?'0.5':food.unit==='piece'?'1':food.unit==='serving'?'0.5':'any';input.inputMode='decimal';input.placeholder='0';input.id='input-'+food.id;input.setAttribute('aria-label',food.name+'份量');const unit=document.createElement('span');unit.textContent=food.unit==='scoop'?'平匙':food.unit==='piece'?'顆':food.unit==='serving'?'份':'g';control.append(input,unit);row.append(info,control);foodsElement.append(row);
  input.addEventListener('input',()=>{let n=Number(input.value);if(!Number.isFinite(n)||n<0){n=0;input.value='';}if(n>0){records[selectedDate]??={};records[selectedDate][selectedMeal]??={};records[selectedDate][selectedMeal][food.id]=n;}else{delete records[selectedDate]?.[selectedMeal]?.[food.id];prune();}persist();renderTotals();});
 });
 function prune(){if(records[selectedDate]?.[selectedMeal]&&!Object.keys(records[selectedDate][selectedMeal]).length)delete records[selectedDate][selectedMeal];if(records[selectedDate]&&!Object.keys(records[selectedDate]).length)delete records[selectedDate];}
