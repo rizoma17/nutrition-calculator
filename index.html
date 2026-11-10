@@ -29,7 +29,7 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 <div class="datebar"><label for="recordDate">紀錄日期</label><input id="recordDate" type="date"><button id="today" type="button">今天</button></div>
 <nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button><button type="button" data-meal="other">其他</button></nav>
 <section class="card" aria-label="當日各餐總計"><h2>當日各餐</h2><div id="mealSummary" class="meal-summary"></div></section>
-<section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><div id="foods"></div>
+<section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><details class="manual" id="copyPanel"><summary>複製其他日期的餐點</summary><p class="muted">預設為目前紀錄日期的前一天、相同餐別。複製後仍可調整份量。</p><div class="manual-grid"><label for="copyDate">來源日期<input id="copyDate" type="date"></label><label for="copyMeal">來源餐別<select id="copyMeal" style="width:100%;min-height:44px;margin-top:6px"></select></label></div><p id="copyPreview" class="muted"></p><button id="copyConfirm" type="button">複製到本餐</button><p id="copyStatus" class="status" role="status" aria-live="polite"></p></details><div id="foods"></div>
 <div id="manualList" aria-label="本餐手動紀錄"></div>
 <details class="manual" id="manualPanel"><summary>＋ 手動新增食物</summary>
 <p class="muted">填入這次實際吃下整份的數值，不是每 100 g 的數值。熱量未知可留白，之後可編輯補上。</p>
@@ -100,7 +100,7 @@ function selectMeal(meal){resetManualForm();selectedMeal=meal;render();}
 function selectDate(date){if(!validDate(date)){dateInput.value=selectedDate;return;}resetManualForm();selectedDate=date;calendarMonth=date.slice(0,7);dateInput.value=date;render();}
 document.querySelectorAll('[data-meal]').forEach(button=>button.addEventListener('click',()=>selectMeal(button.dataset.meal)));
 dateInput.addEventListener('change',()=>selectDate(dateInput.value));document.getElementById('today').addEventListener('click',()=>selectDate(localDate()));
-function render(){document.getElementById('mealTitle').textContent=mealNames[selectedMeal]+'食物';document.querySelectorAll('[data-meal]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.meal===selectedMeal)));foodData.forEach(food=>{document.getElementById('input-'+food.id).value=amounts()[food.id]||'';});renderManualList();renderTotals();}
+function render(){resetCopySource();document.getElementById('mealTitle').textContent=mealNames[selectedMeal]+'食物';document.querySelectorAll('[data-meal]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.meal===selectedMeal)));foodData.forEach(food=>{document.getElementById('input-'+food.id).value=amounts()[food.id]||'';});renderManualList();renderTotals();}
 function renderTotals(){
  foodData.forEach(food=>{const n=amounts()[food.id]||0;document.getElementById('result-'+food.id).textContent='蛋白質 '+(n*food.protein).toFixed(1)+' g · '+(n*food.cal).toFixed(0)+' kcal';document.getElementById('row-'+food.id).classList.toggle('active',n>0);});
  const current=sumMeal(selectedMeal),day=sumDay();document.getElementById('mealTotal').textContent=mealNames[selectedMeal]+'小計：蛋白質 '+current.protein.toFixed(1)+' g · '+calorieText(current);document.getElementById('totalProtein').textContent=day.protein.toFixed(1);document.getElementById('totalCal').textContent=day.cal.toFixed(0);document.getElementById('unknownCalNote').textContent=day.unknownCal?'已知熱量・另有 '+day.unknownCal+' 項未知':'';document.getElementById('dayLabel').textContent=selectedDate+' 總計';
@@ -128,6 +128,32 @@ function renderDayDetail(){const detail=document.getElementById('dayDetail');det
  Object.keys(mealNames).forEach(meal=>{if(!Object.keys(amounts(meal)).length)return;const section=document.createElement('div');const heading=document.createElement('h4');const t=sumMeal(meal);heading.textContent=mealNames[meal]+' · '+t.protein.toFixed(1)+' g · '+calorieText(t);section.append(heading);const list=document.createElement('ul');foodData.forEach(food=>{const n=amounts(meal)[food.id];if(!n)return;const item=document.createElement('li');const unit=food.unit==='scoop'?'平匙':food.unit==='piece'?'顆':food.unit==='serving'?'份':'g';item.textContent=food.name+' × '+n+' '+unit+'：蛋白質 '+(n*food.protein).toFixed(1)+' g · '+(n*food.cal).toFixed(0)+' kcal';list.append(item);});customItems(meal).forEach(food=>{const item=document.createElement('li');item.textContent=food.name+'（手動）：蛋白質 '+food.protein.toFixed(1)+' g · '+(food.cal===null?'熱量未知':food.cal.toFixed(0)+' kcal');list.append(item);});section.append(list);const edit=document.createElement('button');edit.type='button';edit.textContent='修改'+mealNames[meal];edit.addEventListener('click',()=>{selectMeal(meal);document.getElementById('mealTitle').scrollIntoView({behavior:'smooth',block:'start'});});section.append(edit);detail.append(section);});
 }
 document.getElementById('previousMonth').addEventListener('click',()=>changeMonth(-1));document.getElementById('nextMonth').addEventListener('click',()=>changeMonth(1));document.getElementById('calendarToday').addEventListener('click',()=>selectDate(localDate()));document.getElementById('calendarMonth').addEventListener('change',event=>{const value=event.target.value;if(/^\d{4}-\d{2}$/.test(value)&&validDate(value+'-01')){calendarMonth=value;renderCalendar();}else event.target.value=calendarMonth;});
+
+function resetCopySource(){
+ const previous=new Date(selectedDate+'T12:00:00');previous.setDate(previous.getDate()-1);
+ document.getElementById('copyDate').value=previous.getFullYear()+'-'+String(previous.getMonth()+1).padStart(2,'0')+'-'+String(previous.getDate()).padStart(2,'0');
+ document.getElementById('copyMeal').value=selectedMeal;
+ document.getElementById('copyStatus').textContent='';renderCopyPreview();
+}
+function renderCopyPreview(){
+ const date=document.getElementById('copyDate').value,meal=document.getElementById('copyMeal').value;
+ const has=validDate(date)&&Object.keys(amounts(meal,date)).length>0;
+ document.getElementById('copyPreview').textContent=has?date+' '+mealNames[meal]+'：蛋白質 '+sumMeal(meal,date).protein.toFixed(1)+' g · '+calorieText(sumMeal(meal,date)):'此日期及餐別沒有紀錄。';
+ document.getElementById('copyConfirm').disabled=!has||loadError||(date===selectedDate&&meal===selectedMeal);
+}
+function copyRecordedMeal(date,meal){
+ if(loadError||!validDate(date)||!Object.hasOwn(mealNames,meal)||!Object.keys(amounts(meal,date)).length||(date===selectedDate&&meal===selectedMeal))return false;
+ if(Object.keys(amounts()).length&&!confirm('取代 '+selectedDate+' '+mealNames[selectedMeal]+' 的現有紀錄？'))return false;
+ const copied=JSON.parse(JSON.stringify(amounts(meal,date)));
+ records[selectedDate]??={};records[selectedDate][selectedMeal]=copied;
+ resetManualForm();persist();render();
+ document.getElementById('copyStatus').textContent='已複製 '+date+' '+mealNames[meal]+' 到 '+selectedDate+' '+mealNames[selectedMeal]+'。';
+ return true;
+}
+Object.entries(mealNames).forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;document.getElementById('copyMeal').append(option);});
+document.getElementById('copyDate').addEventListener('change',renderCopyPreview);
+document.getElementById('copyMeal').addEventListener('change',renderCopyPreview);
+document.getElementById('copyConfirm').addEventListener('click',()=>copyRecordedMeal(document.getElementById('copyDate').value,document.getElementById('copyMeal').value));
 
 render();
 if('serviceWorker' in navigator){
