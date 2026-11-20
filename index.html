@@ -29,7 +29,15 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 #copyPanel input[type="date"]{-webkit-appearance:none;appearance:none}
 #copyPanel input[type="date"]::-webkit-date-and-time-value{text-align:left;min-width:0}
 #copyPanel input:focus-visible,#copyPanel select:focus-visible{outline:2px solid #236650;outline-offset:2px}
-.food-sort{grid-column:1/-1;display:flex;gap:8px}.saved-option .amount input{width:54px}.saved-option .amount button{padding:8px}.food-sort button{font-size:13px}#foods .food:last-child{border-bottom:0}
+.saved-option .amount input{width:54px}.saved-option .amount button{padding:8px}#foods .food:last-child{border-bottom:0}
+#foods .food{grid-template-columns:30px minmax(0,1fr) auto;gap:8px}
+#foods .drag-handle{width:30px;min-height:44px;padding:0;background:transparent;color:#8b9b90;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;display:grid;place-items:center;cursor:grab}
+#foods .drag-handle svg{width:20px;height:20px;pointer-events:none}
+#foods .food.drag-placeholder{opacity:.22;background:#e5efe5;border-radius:12px}
+.food-drag-ghost{position:fixed;z-index:9999;pointer-events:none;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;background:white;border:1px solid #b5cdbb;border-radius:12px;padding:15px 8px;box-shadow:0 8px 28px #263e3533;opacity:.98}
+.food-drag-ghost .drag-handle{width:30px;background:transparent;padding:0;color:#236650}
+.food-drag-ghost .drag-handle svg{width:20px;height:20px}
+@media(max-width:360px){#foods .food{grid-template-columns:24px minmax(0,1fr) auto;gap:4px}#foods .drag-handle{width:24px}.saved-option .amount{gap:3px}.saved-option .amount input{width:42px}}
 </style>
 </head>
 <body>
@@ -38,7 +46,7 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 <div class="datebar"><label for="recordDate">紀錄日期</label><input id="recordDate" type="date"><button id="today" type="button">今天</button></div>
 <nav class="tabs" aria-label="選擇餐別"><button type="button" data-meal="breakfast">早餐</button><button type="button" data-meal="lunch">午餐</button><button type="button" data-meal="dinner">晚餐</button><button type="button" data-meal="other">其他</button></nav>
 <section class="card" aria-label="當日各餐總計"><h2>當日各餐</h2><div id="mealSummary" class="meal-summary"></div></section>
-<section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><details class="manual" id="copyPanel" open><summary>複製其他日期的餐點</summary><p class="muted">預設為目前紀錄日期的前一天、相同餐別。複製後仍可調整份量。</p><div class="manual-grid"><label for="copyDate">來源日期<input id="copyDate" type="date"></label><label for="copyMeal">來源餐別<select id="copyMeal"></select></label></div><p id="copyPreview" class="muted"></p><button id="copyConfirm" type="button">複製到本餐</button><p id="copyStatus" class="status" role="status" aria-live="polite"></p></details><div class="tools"><button id="sortFoods" type="button" aria-pressed="false">調整食物順序</button></div><p class="muted">手動食物會自動成為常用選項；每份沿用當時填寫的整份數值，填份數後按「加入」。</p><div id="foods"></div>
+<section class="card"><div class="sectionhead"><h2 id="mealTitle">早餐食物</h2><button class="clear" id="clearMeal" type="button">清空本餐</button></div><p class="muted">輸入食物份量，切換餐別即可分開記錄。</p><details class="manual" id="copyPanel" open><summary>複製其他日期的餐點</summary><p class="muted">預設為目前紀錄日期的前一天、相同餐別。複製後仍可調整份量。</p><div class="manual-grid"><label for="copyDate">來源日期<input id="copyDate" type="date"></label><label for="copyMeal">來源餐別<select id="copyMeal"></select></label></div><p id="copyPreview" class="muted"></p><button id="copyConfirm" type="button">複製到本餐</button><p id="copyStatus" class="status" role="status" aria-live="polite"></p></details><p class="muted">手動食物會自動成為常用選項；每份沿用當時填寫的整份數值，填份數後按「加入」。</p><div id="foods"></div>
 <div id="manualList" aria-label="本餐手動紀錄"></div>
 <details class="manual" id="manualPanel"><summary>＋ 手動新增食物</summary>
 <p class="muted">填入這次實際吃下整份的數值，不是每 100 g 的數值。熱量未知可留白，之後可編輯補上。</p>
@@ -165,7 +173,7 @@ document.getElementById('copyMeal').addEventListener('change',renderCopyPreview)
 document.getElementById('copyConfirm').addEventListener('click',()=>copyRecordedMeal(document.getElementById('copyDate').value,document.getElementById('copyMeal').value));
 
 const preferencesKey='nutrition-food-options-v1';
-let foodOptions=[],foodOrder=[],sortingFoods=false,preferencesError=false;
+let foodOptions=[],foodOrder=[],preferencesError=false;
 function optionKey(x){return JSON.stringify([x.name,x.protein,x.cal]);}
 function rememberFood(item){const key=optionKey(item);if(!foodOptions.some(x=>optionKey(x)===key)){foodOptions.push({id:'custom-option-'+Date.now()+'-'+Math.random().toString(36).slice(2),name:item.name,protein:item.protein,cal:item.cal});return true;}return false;}
 function saveFoodOptions(){if(preferencesError)return;try{localStorage.setItem(preferencesKey,JSON.stringify({options:foodOptions,order:foodOrder}));}catch(e){status.textContent='常用食物儲存失敗，請匯出備份。';status.classList.add('error');}}
@@ -183,10 +191,41 @@ function renderFoodOptions(){
  const control=document.createElement('div');control.className='amount';const input=document.createElement('input');input.type='number';input.min='0';input.step='any';input.value='1';input.inputMode='decimal';input.setAttribute('aria-label',food.name+'份數');
  const add=document.createElement('button');add.type='button';add.textContent='加入';add.addEventListener('click',()=>{const n=Number(input.value);if(loadError||!Number.isFinite(n)||n<=0)return;records[selectedDate]??={};records[selectedDate][selectedMeal]??={};const meal=records[selectedDate][selectedMeal];meal._custom??=[];meal._custom.push({id:'manual-'+Date.now()+'-'+Math.random().toString(36).slice(2),name:food.name+(n===1?'':' × '+n+' 份'),protein:food.protein*n,cal:food.cal===null?null:food.cal*n});persist();renderManualList();renderTotals();});control.append(input,document.createTextNode('份'),add);row.append(info,control);container.append(row);
  });
- const ids=orderedFoodIds();ids.forEach((id,i)=>{const row=document.getElementById('row-'+id);container.append(row);if(sortingFoods){const actions=document.createElement('div');actions.className='food-sort';[['↑',-1],['↓',1],['移到最上方',-i]].forEach(([label,delta])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=delta===0||(delta===1&&i===ids.length-1);b.setAttribute('aria-label',(foodData.find(x=>x.id===id)||foodOptions.find(x=>x.id===id)).name+' '+label);b.addEventListener('click',()=>{if(label==='移到最上方'){foodOrder=[id,...ids.filter(x=>x!==id)];saveFoodOptions();renderFoodOptions();}else moveFood(id,delta);});actions.append(b);});row.append(actions);}});
- document.getElementById('sortFoods').textContent=sortingFoods?'完成排序':'調整食物順序';document.getElementById('sortFoods').setAttribute('aria-pressed',String(sortingFoods));
+ orderedFoodIds().forEach(id=>{const row=document.getElementById('row-'+id);if(!row.querySelector('.drag-handle'))attachDragHandle(row,id);container.append(row);});
 }
-document.getElementById('sortFoods').addEventListener('click',()=>{sortingFoods=!sortingFoods;renderFoodOptions();});
+let foodDrag=null;
+function attachDragHandle(row,id){
+ const handle=document.createElement('button');handle.type='button';handle.className='drag-handle';handle.title='長按並拖曳排序';handle.setAttribute('aria-label','調整 '+(foodData.find(x=>x.id===id)||foodOptions.find(x=>x.id===id)).name+' 的位置（長按拖曳或方向鍵）');handle.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h14"/></svg>';
+ row.prepend(handle);
+ handle.addEventListener('contextmenu',e=>e.preventDefault());
+ handle.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();moveFood(id,e.key==='ArrowUp'?-1:1);document.getElementById('row-'+id).querySelector('.drag-handle').focus();}});
+ handle.addEventListener('pointerdown',e=>{
+ if(foodDrag||e.button!==0)return;
+ const d={row,id,handle,pointer:e.pointerId,startY:e.clientY,startX:e.clientX,y:e.clientY,active:false,frame:0};foodDrag=d;document.getElementById('foods').setPointerCapture(e.pointerId);
+ d.timer=setTimeout(()=>{if(foodDrag!==d)return;const rect=row.getBoundingClientRect();d.active=true;d.offset=d.startY-rect.top;d.ghost=row.cloneNode(true);d.ghost.removeAttribute('id');d.ghost.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));d.ghost.className='food-drag-ghost';d.ghost.setAttribute('aria-hidden','true');d.ghost.inert=true;Object.assign(d.ghost.style,{left:rect.left+'px',width:rect.width+'px',top:rect.top+'px'});document.body.append(d.ghost);row.classList.add('drag-placeholder');if(navigator.vibrate)navigator.vibrate(15);dragFrame(d);},280);
+ });
+}
+const dragContainer=document.getElementById('foods');
+ dragContainer.addEventListener('pointermove',e=>{const d=foodDrag;if(!d||d.pointer!==e.pointerId)return;d.y=e.clientY;if(!d.active&&Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>10)finishFoodDrag(false);});
+ dragContainer.addEventListener('pointerup',e=>{if(foodDrag?.pointer===e.pointerId)finishFoodDrag(true);});
+ dragContainer.addEventListener('pointercancel',e=>{if(foodDrag?.pointer===e.pointerId)finishFoodDrag(false);});
+ dragContainer.addEventListener('lostpointercapture',e=>{if(foodDrag?.pointer===e.pointerId)finishFoodDrag(false);});
+function dragFrame(d){
+ if(foodDrag!==d||!d.active)return;
+ d.ghost.style.top=(d.y-d.offset)+'px';
+ const footer=document.querySelector('.totals');const bottom=footer?Math.min(innerHeight,footer.getBoundingClientRect().top):innerHeight;
+ if(d.y<85)window.scrollBy(0,-Math.min(18,(85-d.y)/3));else if(d.y>bottom-80)window.scrollBy(0,Math.min(18,(d.y-bottom+80)/3));
+ const container=document.getElementById('foods');
+ const others=Array.from(container.children).filter(x=>x!==d.row);
+ const before=others.find(x=>{const r=x.getBoundingClientRect();return d.y<r.top+r.height/2;})||null;
+ if(d.row.nextElementSibling!==before)container.insertBefore(d.row,before);
+ d.frame=requestAnimationFrame(()=>dragFrame(d));
+}
+function finishFoodDrag(commit){
+ const d=foodDrag;if(!d)return;foodDrag=null;clearTimeout(d.timer);cancelAnimationFrame(d.frame);
+ if(d.active){d.ghost.remove();d.row.classList.remove('drag-placeholder');const container=document.getElementById('foods');if(commit){foodOrder=Array.from(container.children).map(x=>x.id.slice(4));saveFoodOptions();}else orderedFoodIds().forEach(id=>container.append(document.getElementById('row-'+id)));}
+ if(dragContainer.hasPointerCapture(d.pointer))dragContainer.releasePointerCapture(d.pointer);
+}
 collectManualFoods();renderFoodOptions();
 
 render();
