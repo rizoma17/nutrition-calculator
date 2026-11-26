@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#236650">
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263e35;background:#f5f6f2;font-size:16px}
-*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}input,select,textarea{font-size:16px}button{cursor:pointer;touch-action:manipulation}
 .container{max-width:540px;margin:auto;padding:24px 16px calc(190px + env(safe-area-inset-bottom))}h1{font-size:26px;margin:0 0 6px}h2{font-size:18px;margin:0}p{margin:6px 0}.muted{color:#718078;font-size:13px;line-height:1.6}
 .card{background:#fff;border:1px solid #e1e7df;border-radius:20px;padding:18px;margin-top:16px}.datebar{display:flex;gap:10px;align-items:center;margin-top:16px}.datebar input{flex:1;min-width:0;border:1px solid #d3ded4;border-radius:12px;padding:12px;background:white;color:inherit}
 button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443;min-height:44px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.tabs button[aria-pressed="true"]{background:#236650;color:white}
@@ -31,14 +31,14 @@ button{border:0;border-radius:12px;padding:12px;background:#eaf0e8;color:#325443
 #copyPanel input:focus-visible,#copyPanel select:focus-visible{outline:2px solid #236650;outline-offset:2px}
 .saved-option .amount input{width:54px}.saved-option .amount button{padding:8px}#foods .food:last-child{border-bottom:0}
 #foods .food{grid-template-columns:30px minmax(0,1fr) auto;gap:8px}
-#foods .drag-handle{width:30px;min-height:44px;padding:0;background:transparent;color:#8b9b90;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;display:grid;place-items:center;cursor:grab}
+#foods .drag-handle{width:30px;min-height:44px;padding:0;background:transparent;color:#8b9b90;touch-action:pinch-zoom;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;display:grid;place-items:center;cursor:grab}
 #foods .drag-handle svg{width:20px;height:20px;pointer-events:none}
 #foods .food.drag-placeholder{opacity:.22;background:#e5efe5;border-radius:12px}
 .food-drag-ghost{position:fixed;z-index:9999;pointer-events:none;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;background:white;border:1px solid #b5cdbb;border-radius:12px;padding:15px 8px;box-shadow:0 8px 28px #263e3533;opacity:.98}
 .food-drag-ghost .drag-handle{width:30px;background:transparent;padding:0;color:#236650}
 .food-drag-ghost .drag-handle svg{width:20px;height:20px}
 @media(max-width:360px){#foods .food{grid-template-columns:24px minmax(0,1fr) auto;gap:4px}#foods .drag-handle{width:24px}.saved-option .amount{gap:3px}.saved-option .amount input{width:42px}}
-#foods .food{position:relative;overflow:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none}#foods .food input{-webkit-user-select:auto;user-select:auto}
+#foods .food{position:relative;overflow:hidden;touch-action:pan-y pinch-zoom;-webkit-user-select:none;user-select:none}#foods .food input{-webkit-user-select:auto;user-select:auto}
 #foods .food[hidden]{display:none!important}
 #foods .food> :not(.swipe-delete){transform:translateX(var(--swipe-x,0px));transition:transform .18s ease}
 #foods .food.swiping> :not(.swipe-delete){transition:none}
@@ -211,7 +211,7 @@ function attachDragHandle(row,id){
  handle.addEventListener('contextmenu',e=>e.preventDefault());
  handle.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();moveFood(id,e.key==='ArrowUp'?-1:1);document.getElementById('row-'+id).querySelector('.drag-handle').focus();}});
  handle.addEventListener('pointerdown',e=>{
- if(foodDrag||e.button!==0)return;closeAllFoodSwipes();
+ if(foodDrag||e.button!==0||!e.isPrimary)return;closeAllFoodSwipes();
  const d={row,id,handle,pointer:e.pointerId,startY:e.clientY,startX:e.clientX,y:e.clientY,active:false,frame:0};foodDrag=d;document.getElementById('foods').setPointerCapture(e.pointerId);
  d.timer=setTimeout(()=>{if(foodDrag!==d)return;const rect=row.getBoundingClientRect();d.active=true;d.offset=d.startY-rect.top;d.ghost=row.cloneNode(true);d.ghost.removeAttribute('id');d.ghost.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));d.ghost.className='food-drag-ghost';d.ghost.setAttribute('aria-hidden','true');d.ghost.inert=true;Object.assign(d.ghost.style,{left:rect.left+'px',width:rect.width+'px',top:rect.top+'px'});document.body.append(d.ghost);row.classList.add('drag-placeholder');if(navigator.vibrate)navigator.vibrate(15);dragFrame(d);},280);
  });
@@ -248,9 +248,9 @@ function attachFoodSwipe(row,id){
  let gesture=null;
  function begin(x,y,target,id){if(foodDrag||target.closest('button,input,select,textarea,.amount'))return;closeAllFoodSwipes(row);const base=row.classList.contains('swipe-open')?-76:0;gesture={id,x,y,base,offset:base,active:false};}
  function move(x,y,event){const g=gesture;if(!g)return;const dx=x-g.x,dy=y-g.y;if(!g.active){if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){gesture=null;return;}if(Math.abs(dx)<6||Math.abs(dx)<Math.abs(dy)*1.15)return;if(dx>0&&!g.base){gesture=null;return;}g.active=true;row.classList.add('swiping');}if(event.cancelable)event.preventDefault();g.offset=Math.max(-76,Math.min(0,g.base+dx));row.style.setProperty('--swipe-x',g.offset+'px');}
- function end(cancel){const g=gesture;gesture=null;if(!g||!g.active)return;const open=g.base===-76?g.offset<-48:g.offset<=-18;closeFoodSwipe(row);if(open){row.classList.add('swipe-open');row.style.setProperty('--swipe-x','-76px');}}
- row.addEventListener('touchstart',e=>{if(e.touches.length===1){const t=e.touches[0];begin(t.clientX,t.clientY,e.target,t.identifier);}}, {passive:true});
- row.addEventListener('touchmove',e=>{if(!gesture)return;const t=Array.from(e.changedTouches).find(t=>t.identifier===gesture.id);if(t)move(t.clientX,t.clientY,e);},{passive:false});
+ function end(cancel){const g=gesture;gesture=null;if(!g||!g.active)return;if(cancel){closeFoodSwipe(row);return;}const open=g.base===-76?g.offset<-48:g.offset<=-18;closeFoodSwipe(row);if(open){row.classList.add('swipe-open');row.style.setProperty('--swipe-x','-76px');}}
+ row.addEventListener('touchstart',e=>{if(e.touches.length===1){const t=e.touches[0];begin(t.clientX,t.clientY,e.target,t.identifier);}else end(true);}, {passive:true});
+ row.addEventListener('touchmove',e=>{if(e.touches.length!==1){end(true);return;}if(!gesture)return;const t=Array.from(e.changedTouches).find(t=>t.identifier===gesture.id);if(t)move(t.clientX,t.clientY,e);},{passive:false});
  row.addEventListener('touchend',e=>{if(gesture&&Array.from(e.changedTouches).some(t=>t.identifier===gesture.id))end(false);},{passive:true});
  row.addEventListener('touchcancel',()=>end(true),{passive:true});
  row.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0)begin(e.clientX,e.clientY,e.target,e.pointerId);});
@@ -259,7 +259,7 @@ function attachFoodSwipe(row,id){
  row.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&gesture?.id===e.pointerId)end(false);});
  row.addEventListener('keydown',e=>{if(e.key==='Delete'&&e.target.matches('.drag-handle')){e.preventDefault();hideFoodOption(id);}});
 }
-document.addEventListener('pointerdown',e=>{if(!e.target.closest('#foods .food'))closeAllFoodSwipes();});
+document.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!e.isPrimary)finishFoodDrag(false);if(!e.target.closest('#foods .food'))closeAllFoodSwipes();});
 
 collectManualFoods();renderFoodOptions();
 
